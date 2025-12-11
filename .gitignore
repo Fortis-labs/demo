@@ -1,0 +1,7 @@
+# Rust artifacts
+/target
+**/*.lock
+
+# Optional
+Cargo.lock
+**/*.rlib
