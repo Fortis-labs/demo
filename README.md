@@ -6,5 +6,5 @@ cargo run --example simulation
 ```
 ## Mainnet 
 ```
-cargo run --example create_multisig
+cargo run --example mainnet
 ```
