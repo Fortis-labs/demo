@@ -15,12 +15,15 @@ use fortis_sdk::{
 };
 
 use litesvm::LiteSVM;
+use solana_sdk::pubkey;
 use solana_sdk::{
-    message::Message, pubkey, pubkey::Pubkey, signature::Keypair, signer::Signer,
+    message::Message,
+    pubkey::Pubkey,
+    signature::Keypair,
+    signer::{EncodableKey, Signer},
     transaction::Transaction,
 };
 use solana_system_interface::instruction::transfer as native_transfer;
-
 pub const SYSTEM_PROGRAM_ID: Pubkey = pubkey!("11111111111111111111111111111111");
 #[tokio::main]
 pub async fn main() {
@@ -28,9 +31,15 @@ pub async fn main() {
     // 1. Initialize Local SVM Environment
     // ------------------------------------------------------------------------------
     let mut svm = LiteSVM::new();
-    svm.add_program_from_file(FORTIS_PROGRAM_ID, "./fortis.so")
+    svm.add_program_from_file(FORTIS_PROGRAM_ID, "fortis.so")
         .expect("Failed to load Fortis program");
-
+    // Set deterministic timestamp
+    let mut clock = svm.get_sysvar::<solana_sdk::sysvar::clock::Clock>();
+    clock.unix_timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    svm.set_sysvar::<solana_sdk::sysvar::clock::Clock>(&clock);
     // Multisig members + "create key" seed
     let (member_1, member_2, member_3, create_key) = (
         Keypair::new(),
@@ -52,6 +61,7 @@ pub async fn main() {
 
     let threshold = 2u8;
     let members = vec![member_1.pubkey(), member_2.pubkey(), member_3.pubkey()];
+    //    println!("members len: {:}", members.len());
     let creator = member_1.insecure_clone();
 
     let multisig_create_ix = multisig_create(
@@ -79,6 +89,10 @@ pub async fn main() {
     println!(
         "Multisig Created Logs:\n{:#?}",
         svm.send_transaction(tx).unwrap().logs
+    );
+    println!(
+        "Multisig Creation expense:\n{:#?}",
+        (1_000_000_000 - svm.get_balance(&creator.pubkey()).unwrap())
     );
 
     // ------------------------------------------------------------------------------
@@ -174,6 +188,7 @@ pub async fn main() {
             svm.send_transaction(tx).unwrap().logs
         );
     }
+
     // ------------------------------------------------------------------------------
     // 6. Execute Proposal Transaction (after threshold approvals)
     // ------------------------------------------------------------------------------
@@ -211,6 +226,7 @@ pub async fn main() {
     // ------------------------------------------------------------------------------
     // 7. Close Proposal & Transaction Accounts (cleanup)
     // ------------------------------------------------------------------------------
+
     let close_ix = proposal_accounts_close(
         ProposalAccountsCloseAccounts {
             multisig: multisig_pda,
