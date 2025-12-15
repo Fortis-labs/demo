@@ -23,7 +23,7 @@ pub const SYSTEM_PROGRAM_ID: Pubkey = solana_sdk::pubkey!("111111111111111111111
 use solana_client::nonblocking::rpc_client::RpcClient;
 #[tokio::main]
 pub async fn main() {
-    let kp_path = "/home/mubariz/.config/solana/id.json";
+    let kp_path = "PATH_TO_WALLET";
     let cluster = "https://api.devnet.solana.com ".to_string();
     let rpc = RpcClient::new(cluster);
 
