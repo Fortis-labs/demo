@@ -4,12 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-fortis_sdk = "1.0.2"
+fortis_sdk = "1.0.4"
 solana-client = "3.0.0"
 litesvm = "0.8.2"
 solana-sdk = "3.0.0"
 solana-system-interface = { version = "3.0.0", features = ["bincode"] }
 tokio = "1.48.0"
+borsh = "1.6.0"
 
 [[example]]
 name = "simulation"

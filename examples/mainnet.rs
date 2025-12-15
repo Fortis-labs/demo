@@ -1,16 +1,13 @@
 use fortis_sdk::{
     client::{
-        multisig_create, proposal_accounts_close, proposal_approve, proposal_create,
+        get_multisig, multisig_create, proposal_accounts_close, proposal_approve, proposal_create,
         proposal_execute,
     },
-    pda::{
-        FORTIS_PROGRAM_ID, TREASURY, get_multisig_pda, get_proposal_pda, get_transaction_pda,
-        get_vault_pda,
-    },
+    pda::{TREASURY, get_multisig_pda, get_proposal_pda, get_transaction_pda, get_vault_pda},
     state::{
         MultisigCreateAccounts, MultisigCreateArgs, ProposalAccountsCloseAccounts,
-        ProposalApproveAccounts, ProposalApproveArgs, ProposalCreateAccounts, ProposalCreateArgs,
-        ProposalExecuteAccounts, ProposallExecuteArgs, VaultTransactionMessage,
+        ProposalApproveAccounts, ProposalApproveArgs, ProposalCreateAccounts,
+        ProposalExecuteAccounts, VaultTransactionMessage,
     },
 };
 use solana_sdk::{
@@ -26,8 +23,8 @@ pub const SYSTEM_PROGRAM_ID: Pubkey = solana_sdk::pubkey!("111111111111111111111
 use solana_client::nonblocking::rpc_client::RpcClient;
 #[tokio::main]
 pub async fn main() {
-    let kp_path = "PATH_TO_WALLET";
-    let cluster = "https://api.mainnet-beta.solana.com".to_string();
+    let kp_path = "/home/mubariz/.config/solana/id.json";
+    let cluster = "https://api.devnet.solana.com ".to_string();
     let rpc = RpcClient::new(cluster);
 
     let bob = Keypair::read_from_file(kp_path).unwrap();
@@ -94,7 +91,7 @@ pub async fn main() {
     let tx = Transaction::new(
         &[bob.insecure_clone(), create_key.insecure_clone()],
         Message::new(
-            &[multisig_create_ix, transfer_to_vault_ix, proposal_create_ix],
+            &[multisig_create_ix, proposal_create_ix, transfer_to_vault_ix],
             Some(&bob.pubkey()),
         ),
         rpc.get_latest_blockhash().await.unwrap(),
@@ -103,6 +100,9 @@ pub async fn main() {
         "Transaction 1:\n{:#?}",
         rpc.send_and_confirm_transaction(&tx).await
     );
+    //try fetching multisig
+    let multisig_state = get_multisig(&rpc, &multisig_pda).await.unwrap();
+    println!("multsig members: {:#?}", multisig_state.members);
 
     let approve_ix = proposal_approve(
         ProposalApproveAccounts {

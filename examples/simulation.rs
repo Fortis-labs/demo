@@ -9,19 +9,15 @@ use fortis_sdk::{
     },
     state::{
         MultisigCreateAccounts, MultisigCreateArgs, ProposalAccountsCloseAccounts,
-        ProposalApproveAccounts, ProposalApproveArgs, ProposalCreateAccounts, ProposalCreateArgs,
-        ProposalExecuteAccounts, ProposallExecuteArgs, VaultTransactionMessage,
+        ProposalApproveAccounts, ProposalApproveArgs, ProposalCreateAccounts,
+        ProposalExecuteAccounts, VaultTransactionMessage,
     },
 };
 
 use litesvm::LiteSVM;
 use solana_sdk::pubkey;
 use solana_sdk::{
-    message::Message,
-    pubkey::Pubkey,
-    signature::Keypair,
-    signer::{EncodableKey, Signer},
-    transaction::Transaction,
+    message::Message, pubkey::Pubkey, signature::Keypair, signer::Signer, transaction::Transaction,
 };
 use solana_system_interface::instruction::transfer as native_transfer;
 pub const SYSTEM_PROGRAM_ID: Pubkey = pubkey!("11111111111111111111111111111111");
@@ -59,7 +55,7 @@ pub async fn main() {
     // ------------------------------------------------------------------------------
     let multisig_pda = get_multisig_pda(&create_key.pubkey(), None).0;
 
-    let threshold = 2u8;
+    let threshold = 2u16;
     let members = vec![member_1.pubkey(), member_2.pubkey(), member_3.pubkey()];
     //    println!("members len: {:}", members.len());
     let creator = member_1.insecure_clone();
@@ -94,6 +90,8 @@ pub async fn main() {
         "Multisig Creation expense:\n{:#?}",
         (1_000_000_000 - svm.get_balance(&creator.pubkey()).unwrap())
     );
+
+    //fetch multisig
 
     // ------------------------------------------------------------------------------
     // 3. Transfer SOL into the Vault PDA
@@ -165,6 +163,7 @@ pub async fn main() {
     // ------------------------------------------------------------------------------
     // 5. Members approve the proposal
     // ------------------------------------------------------------------------------
+
     for member in [&member_2, &member_3] {
         let approve_ix = proposal_approve(
             ProposalApproveAccounts {
